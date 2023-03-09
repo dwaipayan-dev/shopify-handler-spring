@@ -10,8 +10,6 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.EmailService.EmailDetails.EmailDetails;
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.EmailService.EmailServiceInterface.EmailServiceInterface;
 
