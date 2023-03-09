@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.AbandonedCart.AbandonedCart;
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.AbandonedCartService.pqEntry.pqEntry;
+import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.SentMessage.SentMessage;
 
 @Service
 public class AbandonedCartService {
@@ -35,10 +36,12 @@ public class AbandonedCartService {
                 }
                 AbandonedCart currCart = current.getAbandonedCart();
                 if (abandonedCartIds.contains(currCart.getCartId())) {
-                    if (current.getSchedulerLevel() > 0)
+                    if (current.getSchedulerLevel() > 0) {
                         // Send email logic
                         System.out.println("Email Sent to" + currCart.getCustomerEmail());
-                    sentMessages.add(currCart);
+                        sentMessages.add(new SentMessage(currCart.getCustomerEmail(), timeNow, currCart.getItems(),
+                                currCart.getRecoverUrl()));
+                    }
                     if (current.getSchedulerLevel() < intervals.length) {
                         long timeInMs = currCart.getAbandonedStartInMs();
                         currCart.setAbandonedTime(new Date(timeInMs + intervals[current.getSchedulerLevel()]));
@@ -54,7 +57,7 @@ public class AbandonedCartService {
 
     private long[] intervals;
     private PriorityQueue<pqEntry> scheduledTasks;
-    private List<AbandonedCart> sentMessages;
+    private List<SentMessage> sentMessages;
     private Set<Long> abandonedCartIds;
 
     public AbandonedCartService(long[] intervals) {
@@ -78,8 +81,8 @@ public class AbandonedCartService {
         }
     }
 
-    public void removeAbandoned(long cartId) {
-        abandonedCartIds.remove(cartId);
+    public boolean removeAbandoned(long cartId) {
+        return abandonedCartIds.remove(cartId);
     }
 
     public long[] getIntervals() {
@@ -88,6 +91,10 @@ public class AbandonedCartService {
 
     public void setIntervals(long[] intervals) {
         this.intervals = intervals;
+    }
+
+    public List<SentMessage> showAllSent() {
+        return sentMessages;
     }
 
 }
