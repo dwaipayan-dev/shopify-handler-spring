@@ -9,14 +9,21 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.AbandonedCart.AbandonedCart;
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.AbandonedCartService.pqEntry.pqEntry;
 import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.AbandonedCartHandler.SentMessage.SentMessage;
+import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.EmailService.EmailDetails.EmailDetails;
+import com.notifier.webhook.shopify.shopifyhandlerplugin.ShopifyWebhookHandler.EmailService.EmailServiceInterface.EmailServiceInterface;
 
 @Service
 public class AbandonedCartService {
+
+    @Autowired
+    private EmailServiceInterface emailServiceInterface;
+
     private class ScheduledTask extends TimerTask {
         private boolean isDue(pqEntry curr, Date timeNow) {
             AbandonedCart currCart = curr.getAbandonedCart();
@@ -38,7 +45,14 @@ public class AbandonedCartService {
                 if (abandonedCartIds.contains(currCart.getCartId())) {
                     if (current.getSchedulerLevel() > 0) {
                         // Send email logic
-                        System.out.println("Email Sent to" + currCart.getCustomerEmail());
+                        final String recipient = currCart.getCustomerEmail();
+                        final String msgBody = String.format(
+                                "Hi %s, \n Please complete your checkout using the following url %s. \nCheers!",
+                                currCart.getCustomer(), currCart.getRecoverUrl().toString());
+                        EmailDetails email = new EmailDetails(recipient, msgBody, "Your cart needs your attention!",
+                                null);
+                        String message = emailServiceInterface.sendSimpleMail(email);
+                        System.out.println(message + " to " + currCart.getCustomerEmail());
                         sentMessages.add(new SentMessage(currCart.getCustomerEmail(), timeNow, currCart.getItems(),
                                 currCart.getRecoverUrl()));
                     }
